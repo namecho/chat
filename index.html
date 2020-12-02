@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>聊天室</title>
+  <style>
+    * {
+      padding: 0;
+      margin: 0;
+    }
+
+    body {
+      background: #000;
+      height: 100vh;
+      color: #00fd6d;
+      padding: 0 10px 10px;
+      box-sizing: border-box;
+    }
+
+    .header {
+      height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .info {
+      height: 50px;
+      background-color: #333;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+
+    }
+
+    .info label {
+      color: #80dfff;
+      font-size: 18px;
+      margin-right: 10px;
+    }
+
+    .info input {
+      height: 30px;
+      width: 200px;
+      border: 0;
+      outline: none;
+      font-size: 14px;
+      padding: 0 6px;
+      margin-right: 10px;
+    }
+
+    .info .btn {
+      background-color: #0099CC;
+      padding: 0 10px;
+      color: #fff;
+      height: 30px;
+      line-height: 30px;
+      cursor: pointer;
+    }
+
+    .info .btn:hover {
+      background-color: #007da7;
+    }
+
+
+    .cmd {
+      display: block;
+      width: 100%;
+      height: calc(100% - 160px);
+      box-sizing: border-box;
+      background: #000;
+      color: #00fd6d;
+      padding: 10px;
+      border-radius: 0;
+      outline: none;
+      border: 1px solid #666;
+      font-size: 16px;
+      overflow: auto;
+    }
+
+    .chatList {
+      list-style-type: none;
+    }
+
+    .sendText {
+      font-size: 16px;
+      height: 20px;
+      background-color: transparent;
+      border: 0;
+      outline: none;
+      color: #00fd6d;
+      width: 100%;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="header">
+    <h1>欢迎访问匿名聊天室</h1>
+  </div>
+  <div class="info">
+    <label for="nick">昵称</label>
+    <input id="nick" type="text">
+    <div id="btn" class="btn">修改</div>
+  </div>
+  <label for="sendText" class="cmd" id="cmd">
+    <ul id="chatList" class="chatList">
+    </ul>
+    <input id="sendText" class="sendText" type="text">
+  </label>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    let socket = io("http://localhost:3000", {
+      extraHeaders: {
+        "Token": "fdsafdsafdsfsdf"
+      }
+    });
+
+    let cmdEL = document.getElementById('cmd');
+    let nickEL = document.getElementById('nick');
+    let btnEL = document.getElementById('btn');
+    let chatList = document.getElementById('chatList')
+    let sendText = document.getElementById('sendText')
+
+    if (localStorage.getItem('nickname')) {
+      nickEL.value = localStorage.getItem('nickname')
+    } else {
+      nickEL.value = new Date().getTime()
+      localStorage.setItem('nickname', nickEL.value)
+    }
+
+    socket.emit('userInfoEdit', { nickname: nickEL.value })
+
+    btnEL.addEventListener('click', function () {
+      localStorage.setItem('nickname', nickEL.value)
+      socket.emit('userInfoEdit', { nickname: nickEL.value })
+      alert('修改成功，将以新用户加入聊天室')
+    })
+
+    socket.on('enter', function (data) {
+      let li = document.createElement("li");
+      li.innerText = `${data.name}进入了聊天室`
+      chatList.appendChild(li)
+    })
+
+    socket.on('message', function (data) {
+      let li = document.createElement("li");
+      li.innerText = `${data.name}说：${data.message}`
+      chatList.appendChild(li)
+    })
+
+    socket.on('leave', function (data) {
+      let li = document.createElement("li");
+      li.innerText = `${data.name}离开了聊天室`
+      chatList.appendChild(li)
+    })
+
+
+
+    sendText.onkeydown = (e) => {
+      if (e.keyCode === 13) {
+        socket.emit('message', sendText.value);
+        sendText.value = ''
+      }
+    }
+  </script>
+</body>
+
+</html>

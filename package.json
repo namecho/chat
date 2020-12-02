@@ -1,0 +1,12 @@
+{
+  "scripts": {
+    "dev": "node-dev index.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "socket.io": "^3.0.1"
+  },
+  "devDependencies": {
+    "node-dev": "^6.2.0"
+  }
+}
